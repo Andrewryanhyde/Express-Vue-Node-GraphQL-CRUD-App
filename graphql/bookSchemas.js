@@ -82,4 +82,113 @@ var queryType = new GraphQLObjectType({
   }
 });
 
-module.exports = new GraphQLSchema({query: queryType});
+var mutation = new GraphQLObjectType({
+  name: 'Mutation',
+  fields: function () {
+    return {
+      addBook: {
+        type: bookType,
+        args: {
+          isbn: {
+            type: new GraphQLNonNull(GraphQLString)
+          },
+          title: {
+            type: new GraphQLNonNull(GraphQLString)
+          },
+          author: {
+            type: new GraphQLNonNull(GraphQLString)
+          },
+          description: {
+            type: new GraphQLNonNull(GraphQLString)
+          },
+          publishedYear: {
+            type: new GraphQLNonNull(GraphQLInt)
+          },
+          publisher: {
+            type: new GraphQLNonNull(GraphQLString)
+          }
+        },
+        resolve: function (root, params) {
+          const bookModel = new BookModel(params);
+          const newBook = bookModel.save();
+          if (!newBook) {
+            throw new Error('Error');
+          }
+          return newBook
+        }
+      },
+      updateBook: {
+        type: bookType,
+        args: {
+          id: {
+            name: 'id',
+            type: new GraphQLNonNull(GraphQLInt)
+          },
+          isbn: {
+            type: new GraphQLNonNull(GraphQLString)
+          },
+          title: {
+            type: new GraphQLNonNull(GraphQLString)
+          },
+          author: {
+            type: new GraphQLNonNull(GraphQLString)
+          },
+          description: {
+            type: new GraphQLNonNull(GraphQLString)
+          },
+          publishedYear: {
+            type: new GraphQLNonNull(GraphQLInt)
+          },
+          publisher: {
+            type: new GraphQLNonNull(GraphQLString)
+          }
+        },
+        resolve(root, params) {
+          return BookModel
+          .findByPk(params.id)
+          .then(book => {
+            if (!book) {
+              throw new Error('Not found');
+            }
+            return book
+              .update({
+                isbn: params.isbn || book.isbn,
+                title: params.title || book.title,
+                author: params.author || book.author,
+                description: params.description || book.description,
+                publishedYear: params.publishedYear || book.publishedYear,
+                publisher: params.publisher || book.publisher,
+              })
+              .then(() => { return book; })
+              .catch((error) => { throw new Error(error); });
+          })
+          .catch((error) => { throw new Error(error); });
+        }
+      },
+      removeBook: {
+        type: bookType,
+        args: {
+          id: {
+            type: new GraphQLNonNull(GraphQLInt)
+          }
+        },
+        resolve(root, params) {
+          return BookModel
+          .findByPk(params.id)
+          .then(book => {
+            if (!book) {
+              throw new Error('Not found');
+            }
+            return book
+              .destroy()
+              .then(() => { return book; })
+              .catch((error) => { throw new Error(error); });
+          })
+          .catch((error) => { throw new Error(error); });
+        }
+      }
+    }
+  }
+});
+
+module.exports = new GraphQLSchema({query: queryType, mutation: mutation});
