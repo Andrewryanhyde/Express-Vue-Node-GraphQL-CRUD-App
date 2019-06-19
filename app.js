@@ -7,7 +7,20 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
+var graphqlHTTP = require('express-graphql');
+var schema = require('./graphql/bookSchemas');
+var cors = require("cors");
+
 var app = express();
+
+// GraphQL 
+
+app.use('*', cors());
+app.use('/graphql', cors(), graphqlHTTP({
+  schema: schema,
+  rootValue: global,
+  graphiql: true,
+}));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
